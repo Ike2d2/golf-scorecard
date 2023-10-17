@@ -1,0 +1,16 @@
+@import "../../node_modules/tailwindcss/base";
+
+@layer base {
+    body {
+        @apply flex justify-center items-center;
+        background-image: url(../../images/bg.jpg);
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+    }
+
+    html,
+    body {
+        @apply h-full;
+    }
+}
