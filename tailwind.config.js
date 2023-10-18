@@ -4,8 +4,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "hsla(200, 35%, 70%, 1)",
-        "primary-transparent": "hsla(200, 35%, 70%, 0.5)",
+        primary: "hsla(200, 15%, 70%, 1)",
+        "primary-transparent": "hsla(200, 15%, 70%, 0.5)",
       }
     },
   },
