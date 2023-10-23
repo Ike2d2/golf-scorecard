@@ -78,8 +78,18 @@ function renderTees(course) {
             })
 
             const circle = document.createElement('div');
-            circle.className = 'h-6 w-6 aspect-square rounded-full border-2 border-primary';
+            circle.className = 'rounded-full border-2 border-primary flex items-center justify-center px-4';
             circle.style.backgroundColor = e.teeHexColor;
+
+            const yardageSpan = document.createElement('span');
+            yardageSpan.className = 'text-xl';
+            yardageSpan.style.webkitTextStroke = '1px black';
+            let yardage = 0;
+            course.holes.forEach((e) => {
+                yardage += e.teeBoxes[i].yards;
+            })
+            yardageSpan.innerText = yardage + ' yards';
+            circle.append(yardageSpan);
 
             const tee = document.createElement('span');
             tee.innerText = e.teeType[0].toUpperCase() + e.teeType.slice(1);
