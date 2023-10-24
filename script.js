@@ -21,6 +21,12 @@ function setCourse(x) {
     course = x;
 }
 
+let page = null;
+function setPage(x) {
+    page = x;
+    renderTitle();
+}
+
 async function myFetch(url) {
     const response = await fetch(url);
     const data = await response.json();
@@ -28,6 +34,7 @@ async function myFetch(url) {
 }
 
 async function renderCourses() {
+    setPage('course');
     const coursesContainer = document.getElementById('courses');
     const courses = await myFetch(coursesUrl);
     console.log(courses);
@@ -35,11 +42,11 @@ async function renderCourses() {
         const _course = await myFetch(e.url);
         console.log(_course);
         const div = document.createElement('div');
-        div.className = 'flex flex-col p-3 backdrop-blur-md text-white items-center rounded-lg hover:scale-[105%] transition-transform bg-primary-transparent w-80 border border-primary';
+        div.className = 'flex flex-col p-3 backdrop-blur-md items-center rounded-lg hover:scale-[105%] transition-transform bg-primary-transparent w-80 border border-primary';
         div.addEventListener('click', () => {
             coursesContainer.classList.add('hidden');
             setCourse(_course);
-            renderTees(course);
+            renderTees();
         })
 
         const imgWrap = document.createElement('div');
@@ -64,13 +71,14 @@ async function renderCourses() {
     })
 }
 
-function renderTees(course) {
+function renderTees() {
+    setPage('tee');
     const teesContainer = document.getElementById('tees');
     teesContainer.classList.remove('hidden');
     course.holes[0].teeBoxes.forEach((e, i) => {
         if (e.teeHexColor) {
             const div = document.createElement('div');
-            div.className = 'flex justify-between gap-x-6 items-center h-full w-full rounded-lg hover:scale-[105%] transition-transform backdrop-blur-md p-4 bg-primary-transparent border border-primary text-white font-bold';
+            div.className = 'flex justify-between gap-x-6 items-center h-full w-full rounded-lg hover:scale-[105%] transition-transform backdrop-blur-md p-4 bg-primary-transparent border border-primary font-bold';
             div.addEventListener('click', () => {
                 teesContainer.classList.add('hidden');
                 setTee(i);
@@ -83,7 +91,7 @@ function renderTees(course) {
 
             const yardageSpan = document.createElement('span');
             yardageSpan.className = 'text-xl';
-            yardageSpan.style.webkitTextStroke = '1px black';
+            yardageSpan.style.filter = 'drop-shadow(0 0 1px black)';
             let yardage = 0;
             course.holes.forEach((e) => {
                 yardage += e.teeBoxes[i].yards;
@@ -101,6 +109,7 @@ function renderTees(course) {
 }
 
 function renderPlayers() {
+    setPage('players');
     const playersContainer = document.getElementById('players');
     playersContainer.classList.remove('hidden');
 
@@ -110,11 +119,11 @@ function renderPlayers() {
         div.addEventListener('click', () => {
             playersContainer.classList.add('hidden');
             setPlayers(i + 1)
-            renderHole(tee, players);
+            renderHole();
         });
 
         const text = document.createElement('h4');
-        text.className = 'text-white font-bold';
+        text.className = ' font-bold';
         text.innerText = i + 1;
 
         div.append(text);
@@ -124,65 +133,151 @@ function renderPlayers() {
 };
 
 function renderHole() {
+    setPage('hole');
     const holeContainer = document.getElementById('hole');
     holeContainer.innerHTML = null;
     holeContainer.classList.remove('hidden');
 
-    const prev = document.createElement('div');
-    prev.className = 'w-10 h-10 rounded-full bg-primary-transparent text-white flex items-center justify-center text-xl border border-primary hover:scale-[105%] transition-transform absolute -left-16';
+    const cardViewToggle = document.createElement('button');
+    cardViewToggle.className = 'hover:scale-[105%] transition-transform w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform fixed top-6 right-6';
+    cardViewToggle.addEventListener('click', () => {
+        holeContainer.classList.add('hidden');
+        renderCard()
+    })
+
+    const cardIcon = document.createElement('i');
+    cardIcon.className = 'ri-table-fill';
+
+    cardViewToggle.append(cardIcon);
+
+    const prev = document.createElement('button');
+    prev.className = 'hover:scale-[105%] transition-transform w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform absolute left-0 bottom-0 sm:-left-16 sm:bottom-[calc(50%_-_2rem)]';
     prev.addEventListener('click', () => setHole(hole - 1));
 
     const leftArrow = document.createElement('i');
-    leftArrow.className = 'ri-arrow-left-s-line';
+    leftArrow.className = 'ri-arrow-left-s-line font-bold';
+    leftArrow.style.filter = 'drop-shadow(0 0 1px black)';
     prev.append(leftArrow);
 
-    const next = document.createElement('div');
-    next.className = 'w-10 h-10 rounded-full bg-primary-transparent text-white flex items-center justify-center text-xl border border-primary hover:scale-[105%] transition-transform absolute -right-16';
+    const next = document.createElement('button');
+    next.className = 'hover:scale-[105%] transition-transform w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform absolute right-0 bottom-0 sm:-right-16 sm:bottom-[calc(50%_-_2rem)]';
     next.addEventListener('click', () => setHole(hole + 1));
 
     const rightArrow = document.createElement('i');
-    rightArrow.className = 'ri-arrow-right-s-line';
+    rightArrow.className = 'ri-arrow-right-s-line font-bold';
+    rightArrow.style.filter = 'drop-shadow(0 0 1px black)';
     next.append(rightArrow);
 
     const scoreCard = document.createElement('div');
-    scoreCard.className = "min-w-[60%] border border-primary h-3/4 bg-primary-transparent rounded-lg flex flex-col items-center backdrop-blur-sm font-bold text-white px-4 py-8";
+    scoreCard.className = "w-full border border-primary h-5/6 sm:min-h-[50%] bg-primary-transparent rounded-lg flex flex-col items-center backdrop-blur-sm font-bold px-2 py-4";
 
-    const currentHole = document.createElement('h1');
+    const currentHole = document.createElement('h3');
     currentHole.innerText = `Hole: ${course.holes[hole].hole}`;
 
-    const currentPar = document.createElement('h1');
+    const currentPar = document.createElement('h3');
     currentPar.innerText = `Par: ${course.holes[hole].teeBoxes[tee].par}`;
 
-    const currentHandicap = document.createElement('h3');
-    currentHandicap.className = 'mt-4';
+    const holePar = document.createElement('div');
+    holePar.className = 'flex flex-col';
+    holePar.append(currentHole, currentPar);
+
+    const currentHandicap = document.createElement('h5');
     currentHandicap.innerText = `Handicap: ${course.holes[hole].teeBoxes[tee].hcp}`;
 
+    const currentYardage = document.createElement('h5');
+    currentYardage.innerText = `Yardage: ${course.holes[hole].teeBoxes[tee].yards}`
+
+    const handYards = document.createElement('div');
+    handYards.className = 'flex flex-col';
+    handYards.append(currentHandicap,currentYardage);
+
     const holeText = document.createElement('div');
-    holeText.append(currentHole, currentPar, currentHandicap);
+    holeText.className = 'flex items-start justify-between w-full';
+    holeText.append(holePar, handYards);
 
     const playersHolder = document.createElement('div');
-    playersHolder.className = 'flex flex-col gap-y-4 h-full justify-around';
+    playersHolder.className = 'flex flex-col gap-y-2 w-full h-full justify-around items-center';
 
-    new Array(players).fill().forEach((e , i) => {
+    new Array(players).fill().forEach((e, i) => {
         const player = document.createElement('div');
-        player.className = 'flex gap-x-2';
+        player.className = 'flex items-center justify-between w-full';
 
-        const span = document.createElement('span');
-        span.innerText = `Change Name`;
+        const playerName = document.createElement('input');
+        playerName.className = 'outline-none bg-transparent placeholder:text-white placeholder:opacity-80';
+        playerName.placeholder = `Enter Name…`;
 
         const input = document.createElement('input');
         input.setAttribute('type', 'text');
-        input.setAttribute('placeholder', 'Score...');
+        input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('maxlength', '2')
+        input.setAttribute('pattern','[0-9]*')
+        input.className = 'bg-transparent outline-none border-2 border-white invalid:border-red-50 rounded-md p-2 text-center text-3xl w-14 sm:w-16 aspect-square';
 
-        player.append(span,input);
+        player.append(playerName, input);
         playersHolder.append(player);
     })
 
     scoreCard.append(holeText, playersHolder);
 
     hole > 0 && holeContainer.append(prev);
-    holeContainer.append(scoreCard);
+    holeContainer.append(cardViewToggle, scoreCard);
     hole < 17 && holeContainer.append(next);
+}
+
+function renderCard() {
+    setPage('card');
+    const cardContainer = document.getElementById('card');
+    cardContainer.innerHTML = null;
+    cardContainer.classList.remove('hidden');
+
+    const cardViewToggle = document.createElement('button');
+    cardViewToggle.className = 'hover:scale-[105%] transition-transform w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform fixed top-6 right-6';
+    cardViewToggle.addEventListener('click', () => {
+        cardContainer.classList.add('hidden');
+        renderHole()
+    })
+
+    const cardIcon = document.createElement('i');
+    cardIcon.className = 'ri-table-fill';
+
+    cardViewToggle.append(cardIcon);
+
+    cardContainer.append(cardViewToggle);
+}
+
+function renderTitle() {
+    const title = document.getElementById('title');
+    title.innerHTML = null;
+
+    const titleContainer = document.createElement('div');
+    titleContainer.className = 'border border-primary px-4 py-2 backdrop-blur-md bg-primary-transparent rounded-lg items-center justify-center flex';
+
+    const h1 = document.createElement('h1');
+    h1.className = 'text-center';
+
+    let text;
+    switch (page) {
+        case 'course':
+            text = 'Select Course';
+            break;
+        case 'tee':
+            text = 'Select Tee';
+            break;
+        case 'players':
+            text = 'How Many Players?';
+            break;
+        case 'hole':
+            text = 'Scorecard';
+            h1.className = 'text-xl';
+            break;
+        case 'card':
+            text = 'Scorecard';
+            h1.className = 'text-xl';
+            break;
+    }
+    h1.innerText = text;
+    titleContainer.append(h1);
+    title.append(titleContainer);
 }
 
 renderCourses();

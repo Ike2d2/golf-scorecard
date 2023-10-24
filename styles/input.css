@@ -1,18 +1,51 @@
 @tailwind base;
 @layer base {
+  @font-face {
+    font-family: "Gabarito";
+    src: url("fonts/Gabarito-Regular.ttf") format("truetype");
+    font-weight: normal;
+  }
+  @font-face {
+    font-family: "Gabarito";
+    src: url("fonts/Gabarito-Medium.ttf") format("truetype");
+    font-weight: 500;
+  }
+  @font-face {
+    font-family: "Gabarito";
+    src: url("fonts/Gabarito-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+  }
+  @font-face {
+    font-family: "Gabarito";
+    src: url("fonts/Gabarito-Bold.ttf") format("truetype");
+    font-weight: bold;
+  }
+  @font-face {
+    font-family: "Gabarito";
+    src: url("fonts/Gabarito-ExtraBold.ttf") format("truetype");
+    font-weight: bolder;
+  }
+  @font-face {
+    font-family: "Gabarito";
+    src: url("fonts/Gabarito-Black.ttf") format("truetype");
+    font-weight: 900;
+  }
   html {
     @apply overflow-hidden;
     background-image: url(../../images/bg.jpg);
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
+    --primary: hsla(200, 8%, 80%, 1);
+    --primary-transparent: hsla(200, 8%, 80%, 0.5);
   }
   html,
   body {
     @apply h-full;
   }
   body {
-    @apply flex justify-center items-start lg:items-center overflow-y-auto p-6;
+    @apply flex flex-col justify-start items-center lg:justify-center overflow-y-auto p-6 gap-y-6 text-white;
+    font-family: "Gabarito";
   }
   h1 {
     @apply text-6xl;
