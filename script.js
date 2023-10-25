@@ -27,6 +27,9 @@ function setPage(x) {
     renderTitle();
 }
 
+let playersArray = [];
+// localStorage.getItem('playersArray') && (playersArray = JSON.parse(localStorage.getItem('playersArray')))
+
 async function myFetch(url) {
     const response = await fetch(url);
     const data = await response.json();
@@ -64,8 +67,19 @@ async function renderCourses() {
         div.append(header);
 
         const span1 = document.createElement('span');
-        span1.innerText = _course.phone;
+        const phoneDigitsInit = [..._course.phone.matchAll(/\d+/g)];
+        const phoneDigits = phoneDigitsInit.reduce((x, y) => x + y, '');
+        span1.innerText = `(${phoneDigits.slice(0, 3)}) ${phoneDigits.slice(3, 6)}-${phoneDigits.slice(6, 10)}`;
         div.append(span1);
+
+        let totalPar = 0;
+        _course.holes.forEach((e) => {
+            totalPar += e.teeBoxes[0].par;
+        })
+
+        const span2 = document.createElement('span');
+        span2.innerText = `Par: ${totalPar}`;
+        div.append(span2);
 
         coursesContainer.append(div);
     })
@@ -119,6 +133,7 @@ function renderPlayers() {
         div.addEventListener('click', () => {
             playersContainer.classList.add('hidden');
             setPlayers(i + 1)
+            storePlayers();
             renderHole();
         });
 
@@ -130,6 +145,13 @@ function renderPlayers() {
 
         playersContainer.append(div);
     })
+
+    function storePlayers() {
+        new Array(players).fill().forEach((e, i) => {
+            playersArray.push({ id: i, name: '', scores: new Array(18).fill(0) });
+        })
+        localStorage.setItem('playersArray', JSON.stringify(playersArray));
+    }
 };
 
 function renderHole() {
@@ -151,25 +173,23 @@ function renderHole() {
     cardViewToggle.append(cardIcon);
 
     const prev = document.createElement('button');
-    prev.className = 'hover:scale-[105%] transition-transform w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform absolute left-0 bottom-0 sm:-left-16 sm:bottom-[calc(50%_-_2rem)]';
+    prev.className = 'hover:scale-[105%] transition-transform backdrop-blur-md w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform absolute left-0 bottom-0 sm:-left-16 sm:bottom-[calc(50%_-_2rem)]';
     prev.addEventListener('click', () => setHole(hole - 1));
 
     const leftArrow = document.createElement('i');
     leftArrow.className = 'ri-arrow-left-s-line font-bold';
-    leftArrow.style.filter = 'drop-shadow(0 0 1px black)';
     prev.append(leftArrow);
 
     const next = document.createElement('button');
-    next.className = 'hover:scale-[105%] transition-transform w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform absolute right-0 bottom-0 sm:-right-16 sm:bottom-[calc(50%_-_2rem)]';
+    next.className = 'hover:scale-[105%] transition-transform backdrop-blur-md w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform absolute right-0 bottom-0 sm:-right-16 sm:bottom-[calc(50%_-_2rem)]';
     next.addEventListener('click', () => setHole(hole + 1));
 
     const rightArrow = document.createElement('i');
     rightArrow.className = 'ri-arrow-right-s-line font-bold';
-    rightArrow.style.filter = 'drop-shadow(0 0 1px black)';
     next.append(rightArrow);
 
     const scoreCard = document.createElement('div');
-    scoreCard.className = "w-full border border-primary h-5/6 sm:min-h-[50%] bg-primary-transparent rounded-lg flex flex-col items-center backdrop-blur-sm font-bold px-2 py-4";
+    scoreCard.className = "w-full border border-primary h-5/6 sm:min-h-[50%] bg-primary-transparent rounded-lg flex flex-col items-center backdrop-blur-md font-bold px-2 py-4";
 
     const currentHole = document.createElement('h3');
     currentHole.innerText = `Hole: ${course.holes[hole].hole}`;
@@ -189,7 +209,7 @@ function renderHole() {
 
     const handYards = document.createElement('div');
     handYards.className = 'flex flex-col';
-    handYards.append(currentHandicap,currentYardage);
+    handYards.append(currentHandicap, currentYardage);
 
     const holeText = document.createElement('div');
     holeText.className = 'flex items-start justify-between w-full';
@@ -198,19 +218,30 @@ function renderHole() {
     const playersHolder = document.createElement('div');
     playersHolder.className = 'flex flex-col gap-y-2 w-full h-full justify-around items-center';
 
-    new Array(players).fill().forEach((e, i) => {
+    playersArray.forEach((e, i) => {
+        console.log(e);
         const player = document.createElement('div');
         player.className = 'flex items-center justify-between w-full';
 
         const playerName = document.createElement('input');
+        playerName.value = e.name;
         playerName.className = 'outline-none bg-transparent placeholder:text-white placeholder:opacity-80';
         playerName.placeholder = `Enter Name…`;
+        playerName.addEventListener('change', () => {
+            playersArray[i].name = playerName.value;
+            save();
+        })
 
         const input = document.createElement('input');
         input.setAttribute('type', 'text');
         input.setAttribute('inputmode', 'numeric');
         input.setAttribute('maxlength', '2')
         input.setAttribute('pattern','[0-9]*')
+        input.value = e.scores[hole];
+        input.addEventListener('change',() => {
+            playersArray[i].scores[hole] = input.value;
+            save();
+        })
         input.className = 'bg-transparent outline-none border-2 border-white invalid:border-red-50 rounded-md p-2 text-center text-3xl w-14 sm:w-16 aspect-square';
 
         player.append(playerName, input);
@@ -278,6 +309,11 @@ function renderTitle() {
     h1.innerText = text;
     titleContainer.append(h1);
     title.append(titleContainer);
+}
+
+function save() {
+    localStorage.setItem('playersArray', JSON.stringify(playersArray));
+    playersArray = JSON.parse(localStorage.getItem('playersArray'));
 }
 
 renderCourses();

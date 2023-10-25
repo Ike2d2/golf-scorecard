@@ -67,4 +67,9 @@
   }
 }
 @tailwind components;
+@layer components {
+  button {
+    @apply touch-manipulation;
+  }
+}
 @tailwind utilities;/*# sourceMappingURL=input.css.map */
