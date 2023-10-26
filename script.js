@@ -1,9 +1,22 @@
+import './modules/back.js';
+import './modules/done.js';
+
 const coursesUrl = 'https://exquisite-pastelito-9d4dd1.netlify.app/golfapi/courses.json';
+
+let playing = false;
+localStorage.getItem('playing') && (playing = JSON.parse(localStorage.getItem('playing')));
+
+function setPlaying(x) {
+    playing = x;
+    localStorage.setItem('playing', playing);
+    localStorage.getItem('playing');
+}
 
 let hole = 0;
 function setHole(x) {
     hole = x;
     renderHole();
+    renderDone();
 }
 
 let tee = 0;
@@ -17,18 +30,53 @@ function setPlayers(x) {
 }
 
 let course = null;
+localStorage.getItem('course') && (course = JSON.parse(localStorage.getItem('course')));
 function setCourse(x) {
     course = x;
+    localStorage.setItem('course', JSON.stringify(course));
 }
 
+const pages = ['courses', 'tees', 'players', 'hole', 'card'];
 let page = null;
 function setPage(x) {
     page = x;
+    document.querySelectorAll('body > div:not(#title)').forEach((e) => {
+        e.classList.add('hidden');
+    })
+    document.getElementById(x).classList.remove('hidden');
+    const back = document.getElementById('back');
+    if (back) {
+        if (page !== 'courses') {
+            back.setAttribute('visible', '');
+        } else {
+            back.removeAttribute('visible');
+        };
+        back.props.page = page;
+    }
+
+    switch (page) {
+        case 'courses':
+            renderCourses();
+            break;
+        case 'tees':
+            renderTees();
+            break;
+        case 'players':
+            renderPlayers();
+            break;
+        case 'hole':
+            renderHole();
+            break;
+        case 'card':
+            renderCard();
+            break;
+    }
     renderTitle();
+
 }
 
 let playersArray = [];
-// localStorage.getItem('playersArray') && (playersArray = JSON.parse(localStorage.getItem('playersArray')))
+if (playing) {localStorage.getItem('playersArray') && (playersArray = JSON.parse(localStorage.getItem('playersArray')))};
 
 async function myFetch(url) {
     const response = await fetch(url);
@@ -37,27 +85,24 @@ async function myFetch(url) {
 }
 
 async function renderCourses() {
-    setPage('course');
     const coursesContainer = document.getElementById('courses');
+    coursesContainer.innerHTML = null;
     const courses = await myFetch(coursesUrl);
-    console.log(courses);
     courses.forEach(async (e) => {
         const _course = await myFetch(e.url);
-        console.log(_course);
         const div = document.createElement('div');
         div.className = 'flex flex-col p-3 backdrop-blur-md items-center rounded-lg hover:scale-[105%] transition-transform bg-primary-transparent w-80 border border-primary';
         div.addEventListener('click', () => {
-            coursesContainer.classList.add('hidden');
             setCourse(_course);
-            renderTees();
+            setPage('tees');
         })
 
         const imgWrap = document.createElement('div');
-        imgWrap.className = 'rounded-md border border-primary overflow-hidden h-64';
+        imgWrap.className = 'rounded-md border border-primary overflow-hidden h-full';
 
         const img = document.createElement('img');
         img.setAttribute('src', _course.thumbnail);
-        img.className = 'object-none h-full w-full'
+        img.className = 'object-none h-full w-full';
         imgWrap.append(img);
         div.append(imgWrap);
 
@@ -86,17 +131,15 @@ async function renderCourses() {
 }
 
 function renderTees() {
-    setPage('tee');
     const teesContainer = document.getElementById('tees');
-    teesContainer.classList.remove('hidden');
+    teesContainer.innerHTML = null;
     course.holes[0].teeBoxes.forEach((e, i) => {
         if (e.teeHexColor) {
             const div = document.createElement('div');
-            div.className = 'flex justify-between gap-x-6 items-center h-full w-full rounded-lg hover:scale-[105%] transition-transform backdrop-blur-md p-4 bg-primary-transparent border border-primary font-bold';
+            div.className = 'flex justify-between items-center h-full w-full rounded-lg hover:scale-[105%] transition-transform backdrop-blur-md p-4 bg-primary-transparent border border-primary font-bold';
             div.addEventListener('click', () => {
-                teesContainer.classList.add('hidden');
                 setTee(i);
-                renderPlayers();
+                setPage('players')
             })
 
             const circle = document.createElement('div');
@@ -123,18 +166,16 @@ function renderTees() {
 }
 
 function renderPlayers() {
-    setPage('players');
     const playersContainer = document.getElementById('players');
-    playersContainer.classList.remove('hidden');
+    playersContainer.innerHTML = null;
 
     new Array(4).fill(0).forEach((e, i) => {
         const div = document.createElement('div');
         div.className = 'flex justify-center items-center w-full h-full bg-primary-transparent rounded-lg hover:scale-[105%] transition-transform backdrop-blur-md border border-primary';
         div.addEventListener('click', () => {
-            playersContainer.classList.add('hidden');
-            setPlayers(i + 1)
+            setPlayers(i + 1);
             storePlayers();
-            renderHole();
+            setPage('hole');
         });
 
         const text = document.createElement('h4');
@@ -147,6 +188,7 @@ function renderPlayers() {
     })
 
     function storePlayers() {
+        playersArray = [];
         new Array(players).fill().forEach((e, i) => {
             playersArray.push({ id: i, name: '', scores: new Array(18).fill(0) });
         })
@@ -155,16 +197,14 @@ function renderPlayers() {
 };
 
 function renderHole() {
-    setPage('hole');
+    setPlaying('true');
     const holeContainer = document.getElementById('hole');
     holeContainer.innerHTML = null;
-    holeContainer.classList.remove('hidden');
 
     const cardViewToggle = document.createElement('button');
     cardViewToggle.className = 'hover:scale-[105%] transition-transform w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform fixed top-6 right-6';
     cardViewToggle.addEventListener('click', () => {
-        holeContainer.classList.add('hidden');
-        renderCard()
+        setPage('card');
     })
 
     const cardIcon = document.createElement('i');
@@ -189,22 +229,15 @@ function renderHole() {
     next.append(rightArrow);
 
     const scoreCard = document.createElement('div');
-    scoreCard.className = "w-full border border-primary h-5/6 sm:min-h-[50%] bg-primary-transparent rounded-lg flex flex-col items-center backdrop-blur-md font-bold px-2 py-4";
+    scoreCard.className = "w-full border border-primary h-5/6 sm:min-h-[50%] bg-primary-transparent rounded-lg flex flex-col items-center backdrop-blur-md font-bold px-4 py-4 relative gap-y-1";
 
-    const currentHole = document.createElement('h3');
-    currentHole.innerText = `Hole: ${course.holes[hole].hole}`;
-
-    const currentPar = document.createElement('h3');
+    const currentPar = document.createElement('h5');
     currentPar.innerText = `Par: ${course.holes[hole].teeBoxes[tee].par}`;
 
-    const holePar = document.createElement('div');
-    holePar.className = 'flex flex-col';
-    holePar.append(currentHole, currentPar);
-
-    const currentHandicap = document.createElement('h5');
+    const currentHandicap = document.createElement('h6');
     currentHandicap.innerText = `Handicap: ${course.holes[hole].teeBoxes[tee].hcp}`;
 
-    const currentYardage = document.createElement('h5');
+    const currentYardage = document.createElement('h6');
     currentYardage.innerText = `Yardage: ${course.holes[hole].teeBoxes[tee].yards}`
 
     const handYards = document.createElement('div');
@@ -213,13 +246,13 @@ function renderHole() {
 
     const holeText = document.createElement('div');
     holeText.className = 'flex items-start justify-between w-full';
-    holeText.append(holePar, handYards);
+    holeText.append(currentPar, handYards);
 
     const playersHolder = document.createElement('div');
-    playersHolder.className = 'flex flex-col gap-y-2 w-full h-full justify-around items-center';
+    playersHolder.className = 'flex flex-col gap-y-2 w-full h-full justify-start items-center';
+    playersHolder.innerHTML = null;
 
     playersArray.forEach((e, i) => {
-        console.log(e);
         const player = document.createElement('div');
         player.className = 'flex items-center justify-between w-full';
 
@@ -236,9 +269,9 @@ function renderHole() {
         input.setAttribute('type', 'text');
         input.setAttribute('inputmode', 'numeric');
         input.setAttribute('maxlength', '2')
-        input.setAttribute('pattern','[0-9]*')
+        input.setAttribute('pattern', '[0-9]*')
         input.value = e.scores[hole];
-        input.addEventListener('change',() => {
+        input.addEventListener('change', () => {
             playersArray[i].scores[hole] = input.value;
             save();
         })
@@ -248,7 +281,12 @@ function renderHole() {
         playersHolder.append(player);
     })
 
-    scoreCard.append(holeText, playersHolder);
+    const pagination = document.createElement('span');
+    pagination.innerText = `Hole ${hole + 1}/18`;
+    pagination.className = 'absolute bottom-0';
+
+
+    scoreCard.append(holeText, playersHolder, pagination);
 
     hole > 0 && holeContainer.append(prev);
     holeContainer.append(cardViewToggle, scoreCard);
@@ -256,22 +294,21 @@ function renderHole() {
 }
 
 function renderCard() {
-    setPage('card');
     const cardContainer = document.getElementById('card');
     cardContainer.innerHTML = null;
-    cardContainer.classList.remove('hidden');
 
     const cardViewToggle = document.createElement('button');
     cardViewToggle.className = 'hover:scale-[105%] transition-transform w-10 h-10 rounded-full bg-primary-transparent flex items-center justify-center text-3xl border border-primary hover:scale-[105%] transition-transform fixed top-6 right-6';
     cardViewToggle.addEventListener('click', () => {
-        cardContainer.classList.add('hidden');
-        renderHole()
+        setPage('hole');
     })
 
     const cardIcon = document.createElement('i');
     cardIcon.className = 'ri-table-fill';
 
     cardViewToggle.append(cardIcon);
+
+
 
     cardContainer.append(cardViewToggle);
 }
@@ -283,15 +320,15 @@ function renderTitle() {
     const titleContainer = document.createElement('div');
     titleContainer.className = 'border border-primary px-4 py-2 backdrop-blur-md bg-primary-transparent rounded-lg items-center justify-center flex';
 
-    const h1 = document.createElement('h1');
-    h1.className = 'text-center';
+    const h6 = document.createElement('h6');
+    h6.className = 'text-center';
 
     let text;
     switch (page) {
-        case 'course':
+        case 'courses':
             text = 'Select Course';
             break;
-        case 'tee':
+        case 'tees':
             text = 'Select Tee';
             break;
         case 'players':
@@ -299,16 +336,25 @@ function renderTitle() {
             break;
         case 'hole':
             text = 'Scorecard';
-            h1.className = 'text-xl';
             break;
         case 'card':
             text = 'Scorecard';
-            h1.className = 'text-xl';
             break;
     }
-    h1.innerText = text;
-    titleContainer.append(h1);
+    h6.innerText = text;
+    titleContainer.append(h6);
     title.append(titleContainer);
+}
+
+function renderBack() {
+    const btn = document.createElement('back-button');
+    btn.props = { pages, page, setPage, setPlaying }
+    document.getElementById('root').append(btn);
+}
+
+function renderDone() {
+    const btn = document.createElement('done-button');
+    btn.props = { hole };
 }
 
 function save() {
@@ -316,4 +362,5 @@ function save() {
     playersArray = JSON.parse(localStorage.getItem('playersArray'));
 }
 
-renderCourses();
+renderBack();
+playing ? setPage('hole') : setPage('courses')
