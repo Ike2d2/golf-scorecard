@@ -484,6 +484,7 @@ video {
 
 html {
   overflow: hidden;
+  background-image: linear-gradient(235deg, rgb(34, 76, 118) 0%, rgb(212, 217, 236) 100%);
   background-image: url(/images/bg.jpg);
   background-repeat: no-repeat;
   background-size: cover;
