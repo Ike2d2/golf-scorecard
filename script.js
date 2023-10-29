@@ -16,12 +16,21 @@ let hole = 0;
 function setHole(x) {
     hole = x;
     renderHole();
-    renderDone();
+    const done = document.getElementById('done');
+    if (done) {
+        if (hole === 17) {
+            done.setAttribute('visible', '');
+        } else {
+            done.removeAttribute('visible');
+        };
+    }
 }
 
 let tee = 0;
+localStorage.getItem('tee') && (tee = JSON.parse(localStorage.getItem('tee')));
 function setTee(x) {
     tee = x;
+    localStorage.setItem('tee', JSON.stringify(tee));
 }
 
 let players = 0;
@@ -76,7 +85,7 @@ function setPage(x) {
 }
 
 let playersArray = [];
-if (playing) {localStorage.getItem('playersArray') && (playersArray = JSON.parse(localStorage.getItem('playersArray')))};
+if (playing) { localStorage.getItem('playersArray') && (playersArray = JSON.parse(localStorage.getItem('playersArray'))) };
 
 async function myFetch(url) {
     const response = await fetch(url);
@@ -90,6 +99,7 @@ async function renderCourses() {
     const courses = await myFetch(coursesUrl);
     courses.forEach(async (e) => {
         const _course = await myFetch(e.url);
+        console.log(_course)
         const div = document.createElement('div');
         div.className = 'flex flex-col p-3 backdrop-blur-md items-center rounded-lg hover:scale-[105%] transition-transform bg-primary-transparent w-80 border border-primary';
         div.addEventListener('click', () => {
@@ -190,7 +200,7 @@ function renderPlayers() {
     function storePlayers() {
         playersArray = [];
         new Array(players).fill().forEach((e, i) => {
-            playersArray.push({ id: i, name: '', scores: new Array(18).fill(0) });
+            playersArray.push({ id: i, name: '', scores: new Array(18).fill('') });
         })
         localStorage.setItem('playersArray', JSON.stringify(playersArray));
     }
@@ -306,11 +316,182 @@ function renderCard() {
     const cardIcon = document.createElement('i');
     cardIcon.className = 'ri-table-fill';
 
+    const table = document.createElement('table');
+    table.className = 'h-auto overflow-hidden rounded-lg text-black rotate-90 md:rotate-0 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl';
+
+    const tableHeader = document.createElement('tr');
+    tableHeader.className = 'bg-primary-transparent backdrop-blur-md text-white border-none';
+    tableHeader.id = 'tableHeader';
+
+    const holeLabel = document.createElement('th');
+    holeLabel.innerText = 'Hole';
+    tableHeader.append(holeLabel)
+
+    for (let i = 1; i <= 9; i++) {
+        const holeCell = document.createElement('th');
+        holeCell.innerText = i;
+        tableHeader.append(holeCell);
+    }
+
+    const _out = document.createElement('th');
+    _out.innerText = 'Out';
+    tableHeader.append(_out);
+
+    for (let i = 10; i <= 18; i++) {
+        const holeCell = document.createElement('th');
+        holeCell.innerText = i;
+        tableHeader.append(holeCell);
+    }
+
+    const _in = document.createElement('th');
+    _in.innerText = 'In';
+    tableHeader.append(_in);
+
+    const _total = document.createElement('th');
+    _total.innerText = 'Total';
+
+    const _parRow = document.createElement('tr');
+
+    const _par = document.createElement('th');
+    _par.innerText = 'Par';
+
+    _parRow.append(_par);
+
+    let outPar = 0;
+    for (let i = 0; i <= 8; i++) {
+        const parCell = document.createElement('th');
+        const _par = course.holes[i].teeBoxes[tee].par;
+        parCell.innerText = _par;
+        outPar += _par;
+        _parRow.append(parCell);
+    }
+
+    const _outParCell = document.createElement('th');
+    _outParCell.innerText = outPar;
+
+    _parRow.append(_outParCell);
+
+    let inPar = 0;
+    for (let i = 9; i <= 17; i++) {
+        const parCell = document.createElement('th');
+        const _par = course.holes[i].teeBoxes[tee].par;
+        parCell.innerText = _par;
+        inPar += _par;
+        _parRow.append(parCell);
+    }
+
+    const _inParCell = document.createElement('th');
+    _inParCell.innerText = inPar;
+
+    _parRow.append(_inParCell);
+
+    const _totalPar = document.createElement('th');
+    _totalPar.innerText = outPar + inPar;
+
+    _parRow.append(_totalPar);
+
+    const _tee = document.createElement('tr');
+
+    const teeLabel = document.createElement('th');
+    teeLabel.innerText = course.holes[hole].teeBoxes[tee].teeType[0].toUpperCase() + course.holes[hole].teeBoxes[tee].teeType.slice(1);
+    _tee.append(teeLabel);
+
+    let outYards = 0;
+    for (let i = 0; i <= 8; i++) {
+        const yardCell = document.createElement('th');
+        const _yards = course.holes[i].teeBoxes[tee].yards;
+        yardCell.innerText = _yards;
+        outYards += _yards;
+        _tee.append(yardCell);
+    }
+
+    const _outYards = document.createElement('th');
+
+    _outYards.innerText = outYards;
+    _tee.append(_outYards);
+
+    let inYards = 0;
+    for (let i = 9; i <= 17; i++) {
+        const yardCell = document.createElement('th');
+        const _yards = course.holes[i].teeBoxes[tee].yards;
+        yardCell.innerText = _yards;
+        inYards += _yards;
+        _tee.append(yardCell);
+    }
+
+    const _inYards = document.createElement('th');
+
+    _inYards.innerText = inYards;
+    _tee.append(_inYards);
+
+    const totalYards = document.createElement('th');
+
+    totalYards.innerText = outYards + inYards;
+    _tee.append(totalYards);
+
+    const _hcpRow = document.createElement('tr');
+    const _hcp = document.createElement('th');
+    _hcp.innerText = 'HCP';
+    _hcpRow.append(_hcp);
+
+    for (let i = 0; i <= 8; i++) {
+        const hcpCell = document.createElement('th');
+        hcpCell.innerText = course.holes[i].teeBoxes[tee].hcp;
+        _hcpRow.append(hcpCell);
+    }
+
+    _hcpRow.appendChild(document.createElement('th'));
+
+    for (let i = 9; i <= 17; i++) {
+        const hcpCell = document.createElement('th');
+        hcpCell.innerText = course.holes[i].teeBoxes[tee].hcp;
+        _hcpRow.append(hcpCell);
+    }
+
+    _hcpRow.appendChild(document.createElement('th'));
+    _hcpRow.appendChild(document.createElement('th'));
+
+    tableHeader.append(_total);
+
+    table.append(tableHeader, _parRow, _tee, _hcpRow);
+
+    playersArray.forEach((e, i) => {
+        const _playerRow = document.createElement('tr');
+        const _playerName = document.createElement('th');
+        _playerName.innerText = e.name;
+        _playerRow.append(_playerName);
+
+        let outScore = 0;
+        for (let i = 0; i <= 8; i++) {
+            const scoreCell = document.createElement('td');
+            outScore += Number(e.scores[i]);
+            scoreCell.innerText = e.scores[i];
+            _playerRow.append(scoreCell);
+        }
+        const totalOut = document.createElement('td');
+        totalOut.innerText = outScore;
+        _playerRow.append(totalOut);
+
+        let inScore = 0;
+        for (let i = 9; i <= 17; i++) {
+            const scoreCell = document.createElement('td');
+            inScore += Number(e.scores[i]);
+            scoreCell.innerText = e.scores[i];
+            _playerRow.append(scoreCell);
+        }
+        const totalIn = document.createElement('td');
+        totalIn.innerText = inScore;
+
+        const totalScore = document.createElement('td');
+        totalScore.innerText = outScore + inScore;
+
+        _playerRow.append(totalIn, totalScore);
+
+        table.append(_playerRow);
+    })
+
     cardViewToggle.append(cardIcon);
-
-
-
-    cardContainer.append(cardViewToggle);
+    cardContainer.append(cardViewToggle, table);
 }
 
 function renderTitle() {
@@ -354,7 +535,8 @@ function renderBack() {
 
 function renderDone() {
     const btn = document.createElement('done-button');
-    btn.props = { hole };
+    btn.props = { setPage };
+    document.getElementById('root').append(btn);
 }
 
 function save() {
@@ -363,4 +545,5 @@ function save() {
 }
 
 renderBack();
+renderDone();
 playing ? setPage('hole') : setPage('courses')
